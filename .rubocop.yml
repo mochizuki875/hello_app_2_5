@@ -1,0 +1,54 @@
+require:
+  - rubocop-rails
+
+# 標準の規約 + Railsの規約
+Rails:
+  Enabled: true
+
+AllCops:
+  # Rubyのバージョンを指定
+  TargetRubyVersion: 2.4.1
+  # 除外するファイル
+  Exclude:
+    - vendor/bundle/**/*
+    - bin/*
+    - db/**/*
+    - config/**/*
+    - Gemfile
+    - test/**/*
+    - spec/**/*
+    - node_modules/**/*
+
+# Missing magic comment # frozen_string_literal: true. を無視
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+# 日本語でのコメントを許可
+Style/AsciiComments:
+  Enabled: false
+
+# 複数行での「lambda」で「->」による省略記法を許可
+Style/Lambda:
+  Enabled: false
+
+# モジュール名::クラス名の定義を許可
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+# クラスにコメントを残さない
+Style/Documentation:
+  Enabled: false
+
+# 「and」「or」の使用を許可
+Style/AndOr:
+  Enabled: false
+
+# 一行あたりの文字数制限
+Layout/LineLength:
+  Max: 150
+
+# メソッドの行数
+Metrics/MethodLength:
+  Enabled: true
+  CountComments: false
+  Max: 30
