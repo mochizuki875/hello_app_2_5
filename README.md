@@ -1,4 +1,4 @@
-# Helloï¼¿app
+# Hello_app
 railstutorial chapter 1(https://railstutorial.jp/chapters/beginning?version=5.1)
 
 * Ruby version:2.5.5
