@@ -1,0 +1,234 @@
+---
+# refence:https://github.com/openshift/origin/blob/master/examples/quickstarts/rails-postgresql.json
+
+apiVersion: v1
+kind: Template # templateの宣言
+labels: # templateに付与するlabelを記載
+  label: ${NAME}
+  app: ${NAME}
+  template: ${NAME}
+message: This template based on https://github.com/openshift/origin/blob/master/examples/quickstarts/rails-postgresql.json.
+metadata:
+  annotations:
+    description: An example Rails Hello World application. For more information about
+      this app, see https://github.com/mochizuki875/hello_app_2_5. # template一覧で表示する説明文を記載
+    iconClass: icon-ruby
+    openshift.io/display-name: Rails
+    openshift.io/documentation-url: https://github.com/mochizuki875/hello_app_2_5
+    tags: quickstart,ruby,rails
+    template.openshift.io/bindable: 'false'
+  name: rails-hello-app-docker-template # template名を記載
+
+objects: # template内で定義するリソースを配列要素として記載
+
+- apiVersion: v1
+  kind: Secret # secretの宣言
+  labels: # secretに付与するlabelを記載
+    label: ${NAME}
+    app: ${NAME}
+    template: ${NAME}
+  metadata:
+    name: "rails-secret-docker" # secret名を記載
+  stringData: # secret内で定義するkey:valueを記載
+    application-password: P@ssw0rd
+
+- apiVersion: v1
+  kind: Service # serviceの宣言
+  labels: # serviceに付与するlabelを記載
+    label: ${NAME}
+    app: ${NAME}
+    template: ${NAME}
+  metadata:
+    annotations:
+      description: Exposes and load balances the application pods
+    name: "${NAME}" # service名を記載
+  spec:
+    ports:
+    - name: web # port定義の名前を記載
+      port: 8080 # serviceのlisten portを指定
+      targetPort: 3000 # Podのlisten portを指定
+    selector: # このserviceがサポートするPodをlabelで指定する
+      name: "${NAME}"  # name=rails-hello-appのラベルが付与されたPodをサポートする
+
+- apiVersion: v1
+  kind: Route # routeの宣言
+  labels: # routeに付与するlabelを記載
+    label: ${NAME}
+    app: ${NAME}
+    template: ${NAME}
+  metadata:
+    name: "${NAME}" # route名を記載
+  spec:
+    host: "${APPLICATION_DOMAIN}" # routeとして設定するドメイン名を記載
+    to:
+      kind: Service # フォワード先をserviceに指定
+      name: "${NAME}" # フォワード先のservice labelを指定
+
+- apiVersion: v1
+  kind: ImageStream # Imagestreamを宣言
+  labels: # Imagestreamに付与するlabelを記載
+    label: ${NAME}
+    app: ${NAME}
+    template: ${NAME}
+  metadata:
+    annotations:
+      description: Keeps track of changes in the application image
+    name: "${NAME}" # Imagestream名を記載
+
+- apiVersion: v1
+  kind: BuildConfig # buildconfigを宣言
+  labels: # buildconfigに付与するlabelを記載
+    label: ${NAME}
+    app: ${NAME}
+    template: ${NAME}
+  metadata:
+    annotations:
+      description: Defines how to build the application
+      template.alpha.openshift.io/wait-for-ready: 'true' # テンプレートの準備ができるまで待機
+    name: "${NAME}" # buildconfig名を記載
+  spec:
+    output: # buildしたイメージの格納に関する定義
+      to: # 格納先を指定
+        kind: ImageStreamTag # ビルドしたイメージをImagestreamのタグと紐付ける
+        name: "${NAME}:latest" # Imagestreamのタグ名を指定
+    # build時にエラーになるのでコメントアウト（rakeにすれば行けるかも）
+    # postCommit: # build完了前に特定のチェックを行う
+    #   script: bundle exec rails test
+    runPolicy: Serial # ビルドが複数ある場合に順次実施する
+    source: # ビルドに用いる資産を指定する
+      type: Git # Gitから資産を取得する宣言
+      git: # GitHubのURLとブランチを指定
+        ref: "${SOURCE_REPOSITORY_REF}"
+        uri: "${SOURCE_REPOSITORY_URL}"
+      sourceSecret: # GitHubの対象プロジェクトがprivateなのでアクセスtokenを含むsecretを指定
+        name: git-hub-token
+    strategy: # ビルドのストラテジーを宣言する(source,docker,jenkins)
+      type: Docker # dockerストラテジーでビルドを行う（Dockerfileによるイメージビルド）
+      dockerStrategy: # S2Iで用いるイメージを指定する
+        # Dockerfile内で指定したfromイメージを以下に置き換える
+        # from:
+        #   kind: ImageStreamTag
+        #   name: 'ruby:2.5.5-stretch'
+        #   namespace: openshift
+        dockerfilePath: ./Dockerfile # Dockerfileのパスを指定する
+    triggers: #ビルドの実行トリガーを指定する
+    - type: ImageChange
+    - type: ConfigChange
+
+- apiVersion: v1
+  kind: DeploymentConfig # deploymentconfigを宣言
+  labels: # # deploymentconfigに付与するlabelを記載
+    label: ${NAME}
+    app: ${NAME}
+    template: ${NAME}
+  metadata:
+    annotations:
+      description: Defines how to deploy the application server
+      template.alpha.openshift.io/wait-for-ready: 'true'
+    name: "${NAME}" # deploymentconfig名を記載
+  spec:
+    replicas: 1 # ReplicationControllerが有するPodのコピー数
+    selector: # ReplicationControllerで管理するPodのlabelを指定
+      name: "${NAME}"
+    strategy:
+      type: Recreate # デプロイメントストラテジーを指定（デフォルトはRolling）
+      recreateParams: # Recreateストラテジーのパラメーターを指定
+        pre:
+          execNewPod: # 再作成したPodで実行する動作を指定
+            command: # 実行するコマンドを指定
+            - pwd
+            containerName: "${NAME}" # 実行するPod内のコンテナ名を指定
+          failurePolicy: Abort # コマンド実行に失敗したらデプロイ失敗とみなす
+    template: # deployment内でのPodの起動設定を記載
+      metadata:
+        labels: # Podに付与するlabelを記載
+          name: "${NAME}"
+          label: ${NAME}
+          app: ${NAME}
+          template: ${NAME}
+        name: "${NAME}" # Pod名を記載
+      spec:
+        containers: # Pod内で起動するコンテナ情報を記載
+        - name: "${NAME}" # コンテナ名を記載
+          image: " " # コンテナに用いるイメージを指定（空欄にするとtriggerしたイメージタグが使われる？）
+          ports: # コンテナのlistenポートを指定する
+          - containerPort: 3000
+          env: # コンテナに渡す環境変数を指定
+          - name: pass # passという環境変数に別途定義したsecret(rails-secret)のapplication-passwordのvalueを設定する
+            valueFrom:
+              secretKeyRef:
+                key: application-password
+                name: rails-secret-docker
+          - name: RAILS_ENV
+            value: "${RAILS_ENV}"
+
+          livenessProbe: # コンテナの実行状態を監視
+            httpGet:
+              path: "/"
+              port: 3000
+            initialDelaySeconds: 10
+            timeoutSeconds: 3
+
+          readinessProbe: # コンテナのリクエストに対する応答状態を監視
+            httpGet:
+              path: "/"
+              port: 3000
+            initialDelaySeconds: 5
+            timeoutSeconds: 3
+
+          resources: # リソースの使用上限を定義
+            limits:
+              memory: "${MEMORY_LIMIT}"
+
+    triggers: # deployment実行のトリガーを定義する
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+        - "${NAME}"
+        from:
+          kind: ImageStreamTag
+          name: "${NAME}:latest"
+    - type: ConfigChange
+
+parameters: # template内で用いるパラメータを定義する
+- description: The name assigned to all of the frontend objects defined in this template.
+  displayName: Name
+  name: NAME
+  required: true
+  value: rails-hello-app-docker
+- description: The OpenShift Namespace where the ImageStream resides.
+  displayName: Namespace
+  name: NAMESPACE
+  required: true
+  value: myproject
+- description: Maximum amount of memory the Rails container can use.
+  displayName: Memory Limit
+  name: MEMORY_LIMIT
+  required: true
+  value: 512Mi
+- description: The URL of the repository with your application source code.
+  displayName: Git Repository URL
+  name: SOURCE_REPOSITORY_URL
+  required: true
+  value: https://github.com/mochizuki875/hello_app_2_5.git
+- description: Set this to a branch name, tag or other ref of your repository if you
+    are not using the default branch.
+  displayName: Git Reference
+  name: SOURCE_REPOSITORY_REF
+  value: master
+- description: Set this to the relative path to your project if it is not in the root
+    of your repository.
+  displayName: Context Directory
+  name: CONTEXT_DIR
+- description: The exposed hostname that will route to the Rails service, if left
+    blank a value will be defaulted.
+  displayName: Application Hostname
+  name: APPLICATION_DOMAIN
+  value: helloapp.docker.example.com
+- description: Environment under which the sample application will run. Could be set
+    to production, development or test.
+  displayName: Rails Environment
+  name: RAILS_ENV
+  required: true
+  value: production
