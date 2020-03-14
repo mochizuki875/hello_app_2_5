@@ -10,7 +10,7 @@ labels: # templateに付与するlabelを記載
 message: This template based on https://github.com/openshift/origin/blob/master/examples/quickstarts/rails-postgresql.json.
 metadata:
   annotations:
-    description: An example Rails Hello World application. For more information about
+    description: Docker deploy example of Rails Hello World application. For more information about
       this app, see https://github.com/mochizuki875/hello_app_2_5. # template一覧で表示する説明文を記載
     iconClass: icon-ruby
     openshift.io/display-name: Rails
