@@ -181,7 +181,7 @@ objects: # template内で定義するリソースを配列要素として記載
               memory: "${MEMORY_LIMIT}"
 
     triggers: # deployment実行のトリガーを定義する
-    - type: ImageChange
+    - type: ImageChange # 以下で指定したイメージに変更が発生したら再デプロイする
       imageChangeParams:
         automatic: true
         containerNames:
