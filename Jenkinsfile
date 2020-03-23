@@ -15,7 +15,7 @@ pipeline {
             }
         }
         stage('Deploy') {
-            // このstageジョブを実行する環境をagentとして個別に定義
+            // このstageジョブを実行する環境をagent(oc CLI入りのコンテナ)として個別に定義
             agent{ docker 'widerin/openshift-cli:v3.11.0' }
             steps {
                 sh 'ls && oc -h'
