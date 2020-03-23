@@ -1,5 +1,5 @@
 pipeline {
-    agent { any }
+    agent any
     stages {
         stage('Static Analysis') {
             agent { docker 'ruby:2.5.5-stretch' }
