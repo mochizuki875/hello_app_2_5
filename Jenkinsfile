@@ -1,19 +1,15 @@
 pipeline {
     stages {
-        agent { docker 'ruby:2.5.5-stretch' }
-        stage('Setup') {
-            steps{
-                sh 'bundle install'
-             }
-        }
         stage('Static Analysis') {
+            agent { docker 'ruby:2.5.5-stretch' }
             steps {
-                sh 'bundle exec rubocop'
+                sh 'bundle install && bundle exec rubocop'
             }
         }
         stage('Test') {
+            agent { docker 'ruby:2.5.5-stretch' }
             steps {
-                sh 'bundle exec rspec'
+                sh 'bundle install && bundle exec rspec'
             }
         }
     }
