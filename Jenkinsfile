@@ -1,7 +1,6 @@
 pipeline {
-    agent { docker 'ruby:2.5.5-stretch' }
     stages {
-
+        agent { docker 'ruby:2.5.5-stretch' }
         stage('Setup') {
             steps{
                 sh 'bundle install'
