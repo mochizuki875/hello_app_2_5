@@ -25,7 +25,7 @@ pipeline {
         stage('Deploy') {
             agent{ docker 'widerin/openshift-cli:v3.11.0' }
             steps {
-            　　 sh 'ls && oc -h'
+            　  sh 'ls && oc -h'
                 // oc ログイン
                 // Project指定
                 // ビルド実行
