@@ -3,7 +3,9 @@ pipeline {
     stages {
 
         stage('Git Pull') {
-            git url: 'https://github.com/mochizuki875/hello_app_2_5', branch: 'feature_jenkins_test'
+            steps{
+                git url: 'https://github.com/mochizuki875/hello_app_2_5', branch: 'feature_jenkins_test'
+             }
         }
         stage('static') {
             steps {
