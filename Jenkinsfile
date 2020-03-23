@@ -18,10 +18,11 @@ pipeline {
             // このstageジョブを実行する環境をagent(oc CLI入りのコンテナ)として個別に定義
             agent{ docker 'widerin/openshift-cli:v3.11.0' }
             steps {
-                sh 'ls && oc -h'
+                // sh 'ls && oc -h'
                 // oc ログイン
                 // Project指定
                 // ビルド実行
+                sh 'oc login https://192.168.99.100:8443 -u developer -p developer --insecure-skip-tls-verify=true && oc project myproject && oc start-build rails-hello-app-docker'
             }
         }
     }
