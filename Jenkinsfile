@@ -2,17 +2,17 @@ pipeline {
     agent { docker 'ruby:2.5.5-stretch' }
     stages {
 
-        stage('Git Pull') {
+        stage('Setup') {
             steps{
-                sh 'pwd && ls'
+                sh 'bundle install'
              }
         }
-        stage('static') {
+        stage('Static Analysis') {
             steps {
-                sh 'bundle install && bundle exec rubocop'
+                sh 'bundle exec rubocop'
             }
         }
-        stage('test') {
+        stage('Test') {
             steps {
                 sh 'bundle exec rspec'
             }
