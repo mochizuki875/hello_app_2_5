@@ -15,10 +15,11 @@ pipeline {
                 sh 'echo rspec'
             }
         }
-        stage('Deploy')
+        stage('Deploy') {
             agent{ docker 'widerin/openshift-cli:v3.11.0' }
             steps {
                 sh 'ls && oc -h'
             }
+        }
     }
 }
