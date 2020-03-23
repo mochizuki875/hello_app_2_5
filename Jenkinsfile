@@ -9,12 +9,12 @@ pipeline {
         }
         stage('static') {
             steps {
-                sh 'echo static'
+                sh 'bundle install && bundle exec rubocop'
             }
         }
         stage('test') {
             steps {
-                sh 'echo test'
+                sh 'bundle exec rspec'
             }
         }
     }
