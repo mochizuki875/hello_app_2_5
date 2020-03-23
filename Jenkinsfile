@@ -4,7 +4,7 @@ pipeline {
 
         stage('Git Pull') {
             steps{
-                git url: 'https://github.com/mochizuki875/hello_app_2_5', branch: 'feature_jenkins_test'
+                sh 'pwd && ls'
              }
         }
         stage('static') {
