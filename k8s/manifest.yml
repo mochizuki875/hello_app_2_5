@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: Namespace # namespaceの宣言
+metadata:
+  name: hello-app25
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "clb"
+  name: hello-app25-svc
+  namespace: hello-app25
+  labels:
+    app: hello-app25
+spec:
+  selector: # このserviceがサポートするPodをlabelで指定する
+    app: hello-app25
+  # type: LoadBalancer # ingressを利用するためコメントアウト
+  type: NodePort
+  ports:
+    - name: web
+      protocol: TCP
+      port: 3000 # serviceのlisten portを指定
+      targetPort: 3000 # Podのlisten portを指定
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress # ingressリソースの宣言
+metadata:
+  name: "hello-app25-ingress"
+  namespace: "hello-app25"
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+  labels:
+    app: hello-app25
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /hello
+            backend:
+              serviceName: "hello-app25-svc"
+              servicePort: 3000
+          # - path: /goodbye
+          #   backend:
+          #     serviceName: "goodbye-app25-svc"
+          #     servicePort: 3000
+
+---
+apiVersion: v1
+kind: Secret # secretの宣言
+metadata:
+  name: rails-secret-docker # secret名を記載
+  namespace: hello-app25
+type: Opaque
+data: # secret内で定義するkey:value(base64)を記載
+  application-password: UEBzc3cwcmQ=
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-app25-deployment
+  namespace: hello-app25
+  labels:
+    app: hello-app25
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      label: hello-app25
+      app: hello-app25
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 0%
+  template:
+    metadata:
+      labels:
+        label: hello-app25
+        app: hello-app25
+    spec:
+      containers:
+      - name: hello-app25
+        image: keitamochizuki/hello_app:2.5.5
+        ports:
+        - containerPort: 3000
+        env: # コンテナに渡す環境変数を指定
+        - name: pass # passという環境変数に別途定義したsecret(rails-secret)のapplication-passwordのvalueを設定する
+          valueFrom:
+            secretKeyRef:
+              key: application-password
+              name: rails-secret-docker
+        - name: RAILS_ENV
+          value: "production"
